@@ -109,10 +109,10 @@ class P2V:
         prinT('start loading \'ref_df\'...')
         if full_load:
             with open('/media/sdb/p2v/pickles/ref.pkl', 'rb') as file:
-                self.ref_df = pickle.load(file)
+                self.ref_df = pd.read_pickle(file)
         else:
             with open('/media/sdb/p2v/pickles/decades/%s_to_%s/ref.pkl' %(start_year, end_year), 'rb') as file:
-                self.target_ref_df = pickle.load(file)
+                self.target_ref_df = pd.read_pickle(file)
         prinT('finish.')
 
 
@@ -546,10 +546,7 @@ class P2V:
             adjust_text(texts, arrowprops=dict(arrowstyle='->', lw=0.4, color='red'))
     
         if save_fig:
-            dirs = '/media/sdb/p2v/figs/decades/%s_to_%s/' %(start_year, end_year)
-            if not os.path.exists(dirs):
-                os.makedirs(dirs)
-            fig.savefig('/media/sdb/p2v/figs/decades/%s_to_%s/map_of_sci.pdf' %(start_year, end_year), 
+            fig.savefig('map_of_sci_%s_to_%s.png' %(start_year, end_year), 
                         dpi = 300, 
                         facecolor='white', 
                         transparent=False, 
