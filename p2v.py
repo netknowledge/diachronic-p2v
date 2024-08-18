@@ -16,6 +16,7 @@ from scipy.cluster.hierarchy import linkage, fcluster
 
 import matplotlib.pyplot as plt
 import matplotlib.patheffects as path_effects
+from matplotlib.gridspec import GridSpec
 
 import seaborn as sns
 from adjustText import adjust_text  
@@ -37,8 +38,8 @@ class P2V:
                                  'Engineering': '#D20000',
                                  'Environmental Science': '#D26B04',
                                  'Materials Science': '#FC9320',
-                                 'Mathematics': '#FFCC00',
-                                 'Physics and Astronomy': '#FBFF57',
+                                 'Mathematics': '#FBFF57',
+                                 'Physics and Astronomy': '#FFCC00',
                                  
                                  'Medicine' :'#7030A0',
                                  'Nursing': '#9900CC',
@@ -60,6 +61,37 @@ class P2V:
                                  'Pharmacology, Toxicology and Pharmaceutics': '#85D6FF',
                               
                                  'Multidisciplinary': '#000000'}
+        
+        self.disc2abbr = {"Biochemistry, Genetics and Molecular Biology": "Biochem",
+                          "Earth and Planetary Sciences": "Earth",
+                          "Medicine": "Med",
+                          "Physics and Astronomy": "Phys",
+                          "Agricultural and Biological Sciences": "Agri",
+                          "Immunology and Microbiology": "Immuno",
+                          "Chemistry": "Chem",
+                          "Neuroscience": "Neuro",
+                          "Materials Science": "Mat",
+                          "Social Sciences": "Soc",
+                          "Environmental Science": "Env",
+                          "Engineering": "Eng",
+                          "Pharmacology, Toxicology and Pharmaceutics": "Pharm",
+                          "Psychology": "Psy",
+                          "Arts and Humanities": "Arts",
+                          "Mathematics": "Math",
+                          "Veterinary": "Vet",
+                          "Chemical Engineering": "ChemEng",
+                          "Economics, Econometrics and Finance": "Econ",
+                          "Nursing": "Nurs",
+                          "Computer Science": "CS",
+                          "Energy": "Energy",
+                          "Dentistry": "Dent",
+                          "Business, Management and Accounting": "Bus",
+                          "Health Professions": "HealthPro",
+                          "Decision Sciences": "Dec",
+
+                          'Multidisciplinary': 'Multi'
+                          }
+
         if load_raw_MAG:
             prinT('start loading \'paper_df\'...')
             with open('/media/sdb/p2v/pickles/paper.pkl', 'rb') as file:
@@ -468,10 +500,13 @@ class P2V:
                                                           else 1 if int(x)>start_year
                                                           else 0)
 
-        fig = plt.figure(figsize=(15, 15), dpi=300)
-        ax1 = plt.gca()
-        ax1.set_title("Map of Science (%d to %d)\nNumber of journals: %d" %(start_year, end_year, len(plot_df)),)
-        ax1.set_aspect('equal')
+        fig = plt.figure(figsize=(8, 9.6))
+        gs = GridSpec(6, 1, figure=fig, hspace=0)
+        map_ax = fig.add_subplot(gs[0:5, :])
+
+        map_ax.set_title("Map of Science (%d to %d)\nNumber of journals: %d" %(start_year, end_year, len(plot_df)),)
+        map_ax.set_aspect('equal')
+        map_ax.axis('off')
         
         if annotate:
             point_alpha = 0.3
@@ -492,23 +527,25 @@ class P2V:
             plot_df['x_val'] = original_y
             plot_df['y_val'] = -1 * original_x
         
-        sns.scatterplot(data=plot_df, 
-                        x='x_val', 
-                        y='y_val', 
-                        hue='label',
-                        hue_order=self.discipline2color.keys(),
-                        palette=self.discipline2color,
-                        alpha=point_alpha,
-                        s=5,
-                        ax=ax1)
-        ax1.legend(fontsize=6, 
-                   ncols=3, 
-                   # mode='expand',
-                   loc='upper center',
-                   bbox_to_anchor=(0.5, 0),
-                   title='%d Disciplines in This Map' %len(plot_df['label'].unique()))
-        ax1.axis('off')
+        scatter= sns.scatterplot(data=plot_df, x='x_val', y='y_val', hue='label', hue_order=self.discipline2color.keys(), 
+                                 palette=self.discipline2color, alpha=point_alpha, s=5, ax=map_ax)
+        handles, labels = scatter.get_legend_handles_labels()
+        # 在下方子图的位置生成图例
+        legend_ax = fig.add_subplot(gs[-1])
+        legend_ax.axis('off')  # 隐藏坐标轴
+        handles, labels = map_ax.get_legend_handles_labels()
+        legend_ax.legend(handles,
+                         [self.disc2abbr[label] for label in labels],
+                         frameon=False,
+                         fontsize=10, 
+                         markerscale=3,
+                         ncols=6, 
+                         # mode='expand',
+                         loc='upper center')
         
+        # 移除第一个子图中的图例
+        map_ax.get_legend().remove()
+
         if annotate:
             texts = []
             text = plt.text(plot_df[plot_df.VID==center_VID].x_val.values[0], 
@@ -541,13 +578,12 @@ class P2V:
                             hue_order = self.discipline2color.keys(),
                             palette=self.discipline2color,
                             s=5,
-                            ax=ax1,
+                            ax=map_ax,
                             legend=False)
             adjust_text(texts, arrowprops=dict(arrowstyle='->', lw=0.4, color='red'))
     
         if save_fig:
             fig.savefig('map_of_sci_%s_to_%s.png' %(start_year, end_year), 
-                        dpi = 300, 
                         facecolor='white', 
                         transparent=False, 
                         bbox_inches='tight')
