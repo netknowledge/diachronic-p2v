@@ -9,10 +9,8 @@ import os
 
 from gensim.models import word2vec, KeyedVectors
 from sklearn.manifold import TSNE
-from sklearn.cluster import KMeans
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.model_selection import train_test_split
-from scipy.cluster.hierarchy import linkage, fcluster
 
 import matplotlib.pyplot as plt
 import matplotlib.patheffects as path_effects
@@ -395,7 +393,6 @@ class P2V:
     
     def labelling(self, start_year: int, end_year: int, d: int, w: int):
         self.load_wv(start_year, end_year, d, w)
-        full_vectors = self.wv.get_normed_vectors()
         full_VIDs = self.wv.index_to_key
         prinT("%d periodicals appear in this decade. Start labelling them..." %len(full_VIDs))
         labeled_venue_list = self.labeled_journal_info_df.index.to_list()
@@ -530,9 +527,9 @@ class P2V:
         scatter= sns.scatterplot(data=plot_df, x='x_val', y='y_val', hue='label', hue_order=self.discipline2color.keys(), 
                                  palette=self.discipline2color, alpha=point_alpha, s=5, ax=map_ax)
         handles, labels = scatter.get_legend_handles_labels()
-        # 在下方子图的位置生成图例
+        # generate a legend in the last subplot
         legend_ax = fig.add_subplot(gs[-1])
-        legend_ax.axis('off')  # 隐藏坐标轴
+        legend_ax.axis('off')  # hide the axis
         handles, labels = map_ax.get_legend_handles_labels()
         legend_ax.legend(handles,
                          [self.disc2abbr[label] for label in labels],
@@ -543,7 +540,7 @@ class P2V:
                          # mode='expand',
                          loc='upper center')
         
-        # 移除第一个子图中的图例
+        # remove the legend in the first subplot
         map_ax.get_legend().remove()
 
         if annotate:
