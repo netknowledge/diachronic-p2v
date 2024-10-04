@@ -19,7 +19,7 @@ from matplotlib.gridspec import GridSpec
 import seaborn as sns
 from adjustText import adjust_text  
 
-from preprocessing import get_paper_df, get_paper_set, get_ref_df, get_data_for_a_decade
+from preprocessing import get_paper_df, get_ref_df, get_data_for_a_decade
 from utils import prinT, pow10ceil
 import random
 
@@ -112,12 +112,9 @@ class P2V:
         self.ref_df = get_ref_df(self.paper_df, chunksize)
         
     
-    def split_data_for_decades(self, shift=False):
+    def split_data_for_decades(self):
         start_year_list = self.start_year_list
         end_year_list = self.end_year_list
-        if shift:
-            start_year_list = [str(int(year)+3) for year in start_year_list[-7:]]
-            end_year_list = [str(int(year)+3) for year in end_year_list[-7:]]
             
         for i in range(len(start_year_list)):
             get_data_for_a_decade(start_year_list[i], end_year_list[i], self.paper_df, self.ref_df)
@@ -146,15 +143,17 @@ class P2V:
         prinT('finish.')
 
 
-    def load_venue_name2NID_df(self, start_year: int=None, end_year: int=None): 
-        # prinT('start loading \'venue_name2NID_df\'...')
-        with open('/media/sdb/p2v/pickles/decades/%s_to_%s/venue_name2NID.pkl' %(start_year, end_year), 'rb') as file:
-            self.venue_name2NID_df = pickle.load(file)
-        # prinT('finish.')
+    # def load_venue_name2NID_df(self, start_year: int=None, end_year: int=None): 
+    #     # prinT('start loading \'venue_name2NID_df\'...')
+    #     with open('/media/sdb/p2v/pickles/decades/%s_to_%s/venue_name2NID.pkl' %(start_year, end_year), 'rb') as file:
+    #         self.venue_name2NID_df = pickle.load(file)
+    #     # prinT('finish.')
     
     
     def load_walks(self, start_year: int, end_year: int, use_filtered_walks: False):
-        
+        '''
+        Load random walks for input decade. Wether or not to use filtered_walks can be specified.
+        '''
         if use_filtered_walks:
             prinT("start loading filtered walks...")
             with open('/media/sdb/p2v/pickles/decades/%s_to_%s/filtered_walks.pkl' %(start_year, end_year), 'rb') as file:
@@ -209,12 +208,9 @@ class P2V:
                     prinT("finish {}/{} papers...".format(n, int(len(self.target_paper_set))))
                             
                             
-    def random_walk_for_decades(self, num_walks: int=5, shift=False):
+    def random_walk_for_decades(self, num_walks: int=5):
         start_year_list = self.start_year_list
         end_year_list = self.end_year_list
-        if shift:
-            start_year_list = [str(int(year)+3) for year in start_year_list[-7:]]
-            end_year_list = [str(int(year)+3) for year in end_year_list[-7:]]
         
         for i in range(len(start_year_list)):
             prinT("----------------------------------")
@@ -236,6 +232,9 @@ class P2V:
             
         
     def get_overview_info(self):
+        '''
+        Return a DataFrame which contains a summary of data
+        '''
         self.paper_num_list=[]
         self.ref_num_list=[]
         self.citing_paper_list=[]
@@ -342,13 +341,13 @@ class P2V:
         downsampling = 1e-3
         prinT("Training model for papers from %d to %d..." %(int(start_year), int(end_year)))
         self.w2v_model = word2vec.Word2Vec(self.walks, 
-                                      workers=num_workers, 
-                                      vector_size=num_features,
-                                      min_count=min_word_count, 
-                                      window=context_win_size, 
-                                      sample=downsampling, 
-                                      sg=1, 
-                                      negative=negative)
+                                           workers=num_workers, 
+                                           vector_size=num_features,
+                                           min_count=min_word_count, 
+                                           window=context_win_size, 
+                                           sample=downsampling, 
+                                           sg=1, 
+                                           negative=negative)
         vec_file_name = "/media/sdb/p2v/pickles/decades/%s_to_%s/%dfeat_%dcontext_win_size" %(start_year, end_year, num_features, context_win_size)
         self.w2v_model.wv.save(vec_file_name)
         prinT("done and saved model (%dfeat_%dcontext_win_size) to file!" %(num_features, context_win_size))
@@ -357,6 +356,12 @@ class P2V:
         
         
     def load_wv(self, start_year: int, end_year: int, d: int, w: int):
+        '''
+        Load pre-trained wordvectors of periodicals.
+        start_year, end_year: e.g. 1950, 1959
+        d: number of dimension
+        w: window size
+        '''
         prinT("start loading word vectors...")
         self.wv = KeyedVectors.load('/media/sdb/p2v/pickles/decades/%d_to_%d/%dfeat_%dcontext_win_size' 
                                     %(int(start_year), int(end_year), d, w))
@@ -470,6 +475,19 @@ class P2V:
         
     
     def load_VID_labeled(self, start_year: int, end_year: int, d: int, w: int):
+        '''
+        Load a dictionary which periodicals' labels and founding years.
+        start_year, end_year: e.g. 1950, 1959
+        d: number of dimension
+        w: window size
+
+        return: a dictionary
+        VID_labeled = {'VID': labeled_VIDs,
+                       'label': labels,
+                       'subarea_label': subarea_labels,
+                       'year_founded': founding_years}
+        
+        '''
         try:
             prinT("start loading VID_labeled...")
             with open('/media/sdb/p2v/pickles/decades/%s_to_%s/VID_labeled_%dfeat_%dcontext_win_size.pkl' %(start_year, end_year, d, w), 'rb') as dict_file:

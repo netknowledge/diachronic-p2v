@@ -66,20 +66,20 @@ def get_paper_df(chunksize: int=1e+6):
     return paper_df
 
 
-def get_paper_set(paper_df: pd.DataFrame):
-    '''
-    Reuturn a ndarray containing a set of unique papers from paper_df, and store it into a .pkl file
-    '''
+# def get_paper_set(paper_df: pd.DataFrame):
+#     '''
+#     Reuturn a ndarray containing a set of unique papers from paper_df, and store it into a .pkl file
+#     '''
     
-    prinT('generating \'paper_set\', start counting unique PIDs...')
-    paper_set = pd.unique(paper_df['PaperID'])
-    prinT("finish counting unique PIDs, start writing into the file")
-    # Save paper_set into .pkl file
-    with open("/media/sdb/p2v/pickles/paper_set.pkl", "wb") as set_file:
-        pickle.dump(paper_set,set_file)
-    prinT("The file \'paper_set.pkl\' is ready")
+#     prinT('generating \'paper_set\', start counting unique PIDs...')
+#     paper_set = pd.unique(paper_df['PaperID'])
+#     prinT("finish counting unique PIDs, start writing into the file")
+#     # Save paper_set into .pkl file
+#     with open("/media/sdb/p2v/pickles/paper_set.pkl", "wb") as set_file:
+#         pickle.dump(paper_set,set_file)
+#     prinT("The file \'paper_set.pkl\' is ready")
     
-    return paper_set
+#     return paper_set
     
     
 def get_ref_df(paper_df: pd.DataFrame, chunksize: int=1e+8):
