@@ -89,6 +89,11 @@ class P2V:
 
                           'Multidisciplinary': 'Multi'
                           }
+        
+        # get the path of the class file
+        self.class_dir = os.path.dirname(os.path.abspath(__file__))
+        # construct the path of the data directory
+        self.data_dir = os.path.join(self.class_dir, 'data')
 
         if load_raw_MAG:
             prinT('start loading \'paper_df\'...')
@@ -363,7 +368,7 @@ class P2V:
         w: window size
         '''
         prinT("start loading word vectors...")
-        self.wv = KeyedVectors.load('/media/sdb/p2v/pickles/decades/%d_to_%d/%dfeat_%dcontext_win_size' 
+        self.wv = KeyedVectors.load(os.path.join(self.data_dir, 'decades/%d_to_%d/%dfeat_%dcontext_win_size')
                                     %(int(start_year), int(end_year), d, w))
         prinT('word vectors loaded, and its shape is: ' + str(self.wv.vectors.shape))
         return self.wv
@@ -389,7 +394,7 @@ class P2V:
         wv_2d = {'x_val': x_vals,
                  'y_val': y_vals,
                  'VID': VIDs}
-        with open('/media/sdb/p2v/pickles/decades/%s_to_%s/wv_2d_%dfeat_%dcontext_win_size.pkl' 
+        with open('data/decades/%s_to_%s/wv_2d_%dfeat_%dcontext_win_size.pkl' 
                   %(start_year, end_year, d, w), 'wb') as dict_file:
                 pickle.dump(wv_2d, dict_file)
         prinT("The file \'wv_2d.pkl\' is ready.")
@@ -450,14 +455,14 @@ class P2V:
 
     def load_MAG_venue_info_df(self):
         prinT("start loading Mag_venue_info_df")
-        with open('/media/sdb/p2v/pickles/MAG_venue_info_df.pkl', 'rb') as df_file:
+        with open(os.path.join(self.data_dir, 'MAG_venue_info_df.pkl'), 'rb') as df_file:
             self.MAG_venue_info_df = pd.compat.pickle_compat.load(df_file)
         prinT("finish.")
 
         
     def load_labeled_journal_info_df(self):
         prinT("start loading labeled_journal_info_df")
-        with open('/media/sdb/p2v/pickles/labeled_journal_info_df.pkl', 'rb') as df_file:
+        with open(os.path.join(self.data_dir, 'labeled_journal_info_df.pkl'), 'rb') as df_file:
             self.labeled_journal_info_df = pd.compat.pickle_compat.load(df_file)
         prinT("finish.")
         
@@ -465,7 +470,8 @@ class P2V:
     def load_wv_2d(self, start_year: int, end_year: int, d: int, w: int):
         try:
             prinT("start loading wv_2d...")
-            with open('/media/sdb/p2v/pickles/decades/%s_to_%s/wv_2d_%dfeat_%dcontext_win_size.pkl' %(start_year, end_year, d, w), 'rb') as file:
+            with open(os.path.join(self.data_dir, 'decades/%s_to_%s/wv_2d_%dfeat_%dcontext_win_size.pkl') 
+                      %(start_year, end_year, d, w), 'rb') as file:
                 wv_2d = pickle.load(file)
             prinT("finish.")
             return wv_2d
@@ -490,7 +496,8 @@ class P2V:
         '''
         try:
             prinT("start loading VID_labeled...")
-            with open('/media/sdb/p2v/pickles/decades/%s_to_%s/VID_labeled_%dfeat_%dcontext_win_size.pkl' %(start_year, end_year, d, w), 'rb') as dict_file:
+            with open(os.path.join(self.data_dir, 'decades/%s_to_%s/VID_labeled_%dfeat_%dcontext_win_size.pkl')
+                      %(start_year, end_year, d, w), 'rb') as dict_file:
                 VID_labeled = pickle.load(dict_file)
             prinT("finish.")
             return VID_labeled
