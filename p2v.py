@@ -90,6 +90,12 @@ class P2V:
                           'Multidisciplinary': 'Multi'
                           }
         
+        self.area_color_dict = {'Life Science': '#0099FF',
+                                'Health Science': '#CC00FF',
+                                'Physical Science': '#FC9320',
+                                'Social Science': '#16A90F',
+                                'Multidisciplinary': '#000000'}
+        
         # get the path of the class file
         self.class_dir = os.path.dirname(os.path.abspath(__file__))
         # construct the path of the data directory
