@@ -96,6 +96,12 @@ class P2V:
                                 'Social Science': '#16A90F',
                                 'Multidisciplinary': '#000000'}
         
+        self.area_abbr_dict = {'Life Science': 'Life',
+                               'Health Science': 'Health',
+                               'Physical Science': 'Physical',
+                               'Social Science': 'Social',
+                               'Multidisciplinary': 'Multi',}
+        
         # get the path of the class file
         self.class_dir = os.path.dirname(os.path.abspath(__file__))
         # construct the path of the data directory
