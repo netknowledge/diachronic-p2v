@@ -8,6 +8,7 @@ from multiprocessing import cpu_count
 import os
 
 from gensim.models import word2vec, KeyedVectors
+from scipy.linalg import orthogonal_procrustes
 from sklearn.manifold import TSNE
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.model_selection import train_test_split
@@ -21,7 +22,6 @@ from adjustText import adjust_text
 
 from preprocessing import get_paper_df, get_ref_df, get_data_for_a_decade
 from utils import prinT, pow10ceil
-import random
 
 
 class P2V:    
@@ -64,7 +64,7 @@ class P2V:
                           "Earth and Planetary Sciences": "Earth",
                           "Medicine": "Med",
                           "Physics and Astronomy": "Phys",
-                          "Agricultural and Biological Sciences": "Agri",
+                          "Agricultural and Biological Sciences": "Bio",
                           "Immunology and Microbiology": "Immuno",
                           "Chemistry": "Chem",
                           "Neuroscience": "Neuro",
@@ -106,6 +106,7 @@ class P2V:
         self.class_dir = os.path.dirname(os.path.abspath(__file__))
         # construct the path of the data directory
         self.data_dir = os.path.join(self.class_dir, 'data')
+        print("data_dir: ", self.data_dir)
 
         if load_raw_MAG:
             prinT('start loading \'paper_df\'...')
@@ -141,10 +142,10 @@ class P2V:
     def load_paper_df(self, full_load: bool=True, start_year: int=None, end_year: int=None):
         prinT('start loading \'paper_df\'...')
         if full_load:
-            with open('/media/sdb/p2v/pickles/paper.pkl', 'rb') as file:
+            with open(os.path.join(self.data_dir, 'paper.pkl'), 'rb') as file:
                 self.paper_df = pickle.load(file)   
         else:
-            with open('/media/sdb/p2v/pickles/decades/%s_to_%s/paper.pkl' %(start_year, end_year), 'rb') as file:
+            with open(os.path.join(self.data_dir, 'decades/%s_to_%s/paper.pkl' %(start_year, end_year)), 'rb') as file:
                 self.target_paper_df = pickle.load(file)
         prinT('finish.')
     
@@ -155,7 +156,7 @@ class P2V:
             with open('/media/sdb/p2v/pickles/ref.pkl', 'rb') as file:
                 self.ref_df = pd.read_pickle(file)
         else:
-            with open('/media/sdb/p2v/pickles/decades/%s_to_%s/ref.pkl' %(start_year, end_year), 'rb') as file:
+            with open(os.path.join(self.data_dir, 'decades/%s_to_%s/ref.pkl' %(start_year, end_year)), 'rb') as file:
                 self.target_ref_df = pd.read_pickle(file)
         prinT('finish.')
 
@@ -386,30 +387,67 @@ class P2V:
         return self.wv
     
     
-    def reduce_dimensions(self, start_year: int, end_year: int, d: int, w:int):
-        self.load_wv(start_year, end_year, d, w)
-        prinT("start reducing dimension...")
-        num_dimensions = 2
+    def reduce_dimensions(self, start_year: int, end_year: int, d: int, w:int, 
+                          use_aligned_vectors=False, ref_start_year=2010, ref_end_year=2021,
+                          save=False):
+        '''
+        Reduce the dimension of word vectors to 2D using t-SNE.
+        Align the word vectors of the input decade with the reference decade for better visualization, if needed.
+        '''
+        if use_aligned_vectors and ref_start_year != start_year and ref_end_year != end_year:
+            print("-----------------------")
+            prinT("start aligning {}-{} with the {}-{}".format(ref_start_year, ref_end_year, start_year, end_year))
 
-        # extract the words & their vectors, as numpy arrays
-        vectors = self.wv.get_normed_vectors()
-        VIDs = self.wv.index_to_key
+            wv = self.load_wv(start_year, end_year, 100, 10)
+            ref_wv = self.load_wv(ref_start_year, ref_end_year, 100, 10)
+
+            VIDs = wv.index_to_key
+            ref_VIDs = ref_wv.index_to_key
+            shared_VIDs = list(set(VIDs) & set(ref_VIDs))
+            prinT("the number of shared VIDs between this two decades: %d" %len(shared_VIDs))
+
+            idx = [wv.get_index(VID) for VID in shared_VIDs]
+            ref_idx = [ref_wv.get_index(VID) for VID in shared_VIDs]
+
+            vectors = wv.get_normed_vectors()[idx]
+            ref_vectors = ref_wv.get_normed_vectors()[ref_idx]
+
+            prinT("start aligning...")
+            R, sca = orthogonal_procrustes(vectors, ref_vectors)
+            aligned_vectors = np.dot(wv.get_normed_vectors(), R)
+            prinT("finish aligning.")
+            print("-----------------------")
+
+            vectors_nd = aligned_vectors
+        else:
+            print("-----------------------")
+            print("don't align, start loading word vectors...")
+            self.load_wv(start_year, end_year, d, w)
+
+            # extract the words & their vectors, as numpy arrays
+            vectors_nd = self.wv.get_normed_vectors()
+            VIDs = self.wv.index_to_key
+            print("-----------------------")
 
         # reduce using t-SNE
+        prinT("start reducing dimension...")
+        num_dimensions = 2
         tsne = TSNE(n_components=num_dimensions, random_state=2023)
-        vectors = tsne.fit_transform(vectors)
+        vectors_2d = tsne.fit_transform(vectors_nd)
 
-        x_vals = [v[0] for v in vectors]
-        y_vals = [v[1] for v in vectors]
+        x_vals = [v[0] for v in vectors_2d]
+        y_vals = [v[1] for v in vectors_2d]
         prinT("finish.")
         
         wv_2d = {'x_val': x_vals,
-                 'y_val': y_vals,
+                'y_val': y_vals,
                  'VID': VIDs}
-        with open('data/decades/%s_to_%s/wv_2d_%dfeat_%dcontext_win_size.pkl' 
-                  %(start_year, end_year, d, w), 'wb') as dict_file:
-                pickle.dump(wv_2d, dict_file)
-        prinT("The file \'wv_2d.pkl\' is ready.")
+        if save:
+            file_name = os.path.join(self.data_dir, 
+                                     'decades/%s_to_%s/wv_2d_%dfeat_%dcontext_win_size.pkl' %(start_year, end_year, d, w))
+            with open(file_name, 'wb') as dict_file:
+                    pickle.dump(wv_2d, dict_file)
+            prinT(f"The file {file_name} is ready.")
         return wv_2d
     
     
@@ -617,7 +655,7 @@ class P2V:
             adjust_text(texts, arrowprops=dict(arrowstyle='->', lw=0.4, color='red'))
     
         if save_fig:
-            fig.savefig('map_of_sci_%s_to_%s.png' %(start_year, end_year), 
+            fig.savefig('diachronic-p2v/figures/map/map_of_sci_%s_to_%s.png' %(start_year, end_year), 
                         facecolor='white', 
                         transparent=False, 
                         bbox_inches='tight')
