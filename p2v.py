@@ -60,6 +60,38 @@ class P2V:
                               
                                  'Multidisciplinary': '#000000'}
         
+        self.discipline2area = {'Chemical Engineering': 'Physical Science',
+                                 'Chemistry': 'Physical Science',
+                                 'Computer Science': 'Physical Science',
+                                 'Earth and Planetary Sciences': 'Physical Science',
+                                 'Energy': 'Physical Science',
+                                 'Engineering': 'Physical Science',
+                                 'Environmental Science': 'Physical Science',
+                                 'Materials Science': 'Physical Science',
+                                 'Mathematics': 'Physical Science',
+                                 'Physics and Astronomy': 'Physical Science',
+                                 
+                                 'Medicine' :'Health Science',
+                                 'Nursing': 'Health Science',
+                                 'Veterinary': 'Health Science',
+                                 'Dentistry': 'Health Science',
+                                 'Health Professions': 'Health Science',
+
+                                 'Arts and Humanities': 'Social Science',
+                                 'Business, Management and Accounting': 'Social Science',
+                                 'Decision Sciences': 'Social Science',
+                                 'Economics, Econometrics and Finance': 'Social Science',
+                                 'Psychology': 'Social Science',
+                                 'Social Sciences': 'Social Science',
+
+                                 'Agricultural and Biological Sciences': 'Life Science',
+                                 'Biochemistry, Genetics and Molecular Biology': 'Life Science',
+                                 'Immunology and Microbiology': 'Life Science',
+                                 'Neuroscience': 'Life Science',
+                                 'Pharmacology, Toxicology and Pharmaceutics': 'Life Science',
+                              
+                                 'Multidisciplinary': 'Multidisciplinary Science'}
+        
         self.disc2abbr = {"Biochemistry, Genetics and Molecular Biology": "Biochem",
                           "Earth and Planetary Sciences": "Earth",
                           "Medicine": "Med",
