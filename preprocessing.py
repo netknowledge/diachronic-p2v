@@ -176,12 +176,15 @@ def make_labeled_journal_info_df():
        'VenueType', 'VenueID', 'OriginalVenue', 'ScopusName', 'ScopusCategory', 'VenueID', and 'InceptionYear' information, and 
     2. store it into 'labeled_journal_info_df.pkl'
     '''
-    
-    MYSQL_HOST = '144.214.39.113'
-    MYSQL_PORT = '3306'
-    MYSQL_USER = 'key'
-    MYSQL_PASSWORD = 'Keydge11'
-    MYSQL_DB = 'keydge'
+    from dotenv import load_dotenv
+    import os
+
+    load_dotenv()
+    MYSQL_HOST = os.getenv("MYSQL_HOST")
+    MYSQL_PORT = os.getenv("MYSQL_PORT")
+    MYSQL_USER = os.getenv("MYSQL_USER")
+    MYSQL_PASSWORD = os.getenv("MYSQL_PASSWORD")
+    MYSQL_DB = os.getenv("MYSQL_DB")
     engine = create_engine('mysql+pymysql://%s:%s@%s:%s/%s?charset=utf8'
                            % (MYSQL_USER, MYSQL_PASSWORD, MYSQL_HOST, MYSQL_PORT, MYSQL_DB))
     sql = 'SELECT * FROM container WHERE scopus_cat IS NOT NULL AND mag_journal_id IS NOT NULL'

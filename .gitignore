@@ -2,3 +2,4 @@
 __pycache__/
 slush pile/
 data/
+.env
